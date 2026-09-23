@@ -1,0 +1,25 @@
+# Dependencies
+node_modules
+
+# Real data — never committed, since it contains real user records and password hashes
+db/*.db
+db/*.db-journal
+
+# User-uploaded documents (FSSAI certificates, lab reports) — recreated
+# automatically on server startup, see models/documents.js
+uploads/
+
+# Environment / secrets
+.env
+.env.local
+
+# Logs
+*.log
+npm-debug.log*
+
+# Editor / OS
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+Thumbs.db
