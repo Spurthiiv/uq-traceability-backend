@@ -33,11 +33,18 @@ function getLanIp(fallback) {
   return (wifi || candidates[0]).address;
 }
 
-// Builds the public trace URL for a batch, using the frontend's dev port (5173)
-// on this machine's LAN IP — so it works from localhost AND from another
-// device on the same network (e.g. a phone scanning the QR).
+// Builds the public trace URL for a batch. In production, PUBLIC_FRONTEND_URL
+// points at the real deployed frontend (e.g. https://uq-traceability.vercel.app)
+// since the backend's own host/IP has nothing to do with where the frontend
+// lives once they're on separate hosts. Without it (local dev), falls back to
+// this machine's LAN IP on the frontend's dev port (5173) — so it works from
+// localhost AND from another device on the same network (e.g. a phone
+// scanning the QR).
 function buildTraceUrl(host, batch) {
   const identifier = batch.batch_code || batch.id;
+  if (process.env.PUBLIC_FRONTEND_URL) {
+    return `${process.env.PUBLIC_FRONTEND_URL.replace(/\/$/, "")}/trace/${identifier}`;
+  }
   return `http://${getLanIp(host)}:5173/trace/${identifier}`;
 }
 

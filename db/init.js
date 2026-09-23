@@ -1,7 +1,11 @@
 const Database = require("better-sqlite3");
 const path = require("path");
 
-const db = new Database(path.join(__dirname, "traceability.db"));
+// DB_PATH lets a host with a persistent disk (e.g. Render) point this at a
+// mounted volume — otherwise every redeploy would start from an empty
+// database, since the app directory itself isn't durable storage there.
+const DB_PATH = process.env.DB_PATH || path.join(__dirname, "traceability.db");
+const db = new Database(DB_PATH);
 
 db.exec(`
   CREATE TABLE IF NOT EXISTS batches (

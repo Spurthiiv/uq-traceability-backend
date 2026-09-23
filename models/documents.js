@@ -2,7 +2,9 @@ const path = require("path");
 const fs = require("fs");
 const db = require("../db/init");
 
-const UPLOAD_DIR = path.join(__dirname, "..", "uploads");
+// UPLOAD_DIR lets a host with a persistent disk (e.g. Render) point this at a
+// mounted volume, for the same reason as DB_PATH in db/init.js.
+const UPLOAD_DIR = process.env.UPLOAD_DIR || path.join(__dirname, "..", "uploads");
 if (!fs.existsSync(UPLOAD_DIR)) fs.mkdirSync(UPLOAD_DIR, { recursive: true });
 
 // Removes every document (DB row + file on disk) attached to an entity —
