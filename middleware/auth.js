@@ -1,5 +1,5 @@
 const jwt = require("jsonwebtoken");
-const JWT_SECRET = "uq-dev-secret-change-in-production"; // same secret as auth.js
+const JWT_SECRET = process.env.JWT_SECRET || "uq-dev-secret-change-in-production"; // same secret as auth.js
 
 function verifyToken(req, res, next) {
   const header = req.headers.authorization;

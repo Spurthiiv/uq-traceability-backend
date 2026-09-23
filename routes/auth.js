@@ -6,7 +6,7 @@ const { v4: uuidv4 } = require("uuid");
 const db = require("../db/init");
 const { verifyToken, requireRole } = require("../middleware/auth");
 
-const JWT_SECRET = "uq-dev-secret-change-in-production";
+const JWT_SECRET = process.env.JWT_SECRET || "uq-dev-secret-change-in-production";
 const DEFAULT_TEMP_PASSWORD = "Welcome@123";
 
 const USER_SELECT = "id, name, email, organization, role, status, phone, created_at";
