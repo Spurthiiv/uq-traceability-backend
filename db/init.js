@@ -536,4 +536,30 @@ const maxInvoiceSeq = db.prepare("SELECT invoice_number FROM invoices WHERE invo
   .reduce((max, i) => Math.max(max, parseInt(i.invoice_number.split("-").pop(), 10) || 0), 0);
 ensureSequenceAtLeast(`invoice_number_${currentYear}`, maxInvoiceSeq);
 
+// First-run bootstrap: a fresh database (e.g. a brand new hosted deploy) has
+// no way to log in at all otherwise, and hosts without shell access (Render's
+// free tier) can't run db/seed-users.js manually to fix that.
+const userCount = db.prepare("SELECT COUNT(*) c FROM users").get().c;
+if (userCount === 0) {
+  const bcrypt = require("bcryptjs");
+  const { v4: uuidv4 } = require("uuid");
+  const DEFAULT_USERS = [
+    { name: "Spoorthi V", email: "spurthi@fcbizz.com", role: "ADMIN" },
+    { name: "Divya Rao", email: "divya.ops@fcbizz.com", role: "OPS" },
+    { name: "Lakshmi Devi", email: "lakshmi.queen@fcbizz.com", role: "QUEEN" },
+    { name: "Fatima Bee", email: "fatima.queen@fcbizz.com", role: "QUEEN" },
+    { name: "Priya Sharma", email: "priya.retail@fcbizz.com", role: "RETAILER" },
+    { name: "Kavya Nair", email: "kavya.logistics@fcbizz.com", role: "LOGISTICS" },
+  ];
+  const seedPasswordHash = bcrypt.hashSync("Password123!", 10);
+  const insertUser = db.prepare(`
+    INSERT INTO users (id, name, email, password_hash, organization, role)
+    VALUES (?, ?, ?, ?, 'FCMCSL', ?)
+  `);
+  for (const u of DEFAULT_USERS) {
+    insertUser.run(uuidv4(), u.name, u.email, seedPasswordHash, u.role);
+  }
+  console.log(`Seeded ${DEFAULT_USERS.length} default users (password: Password123!) — first run on an empty database.`);
+}
+
 module.exports = db;
