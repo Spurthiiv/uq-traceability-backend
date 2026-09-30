@@ -2,11 +2,18 @@ const express = require("express");
 const router = express.Router();
 const db = require("../db/init");
 
+// CEO/district financial detail is ADMIN-only; Operations (mounted with
+// ADMIN+OPS at the server level) stays open to both.
+function adminOnly(req, res, next) {
+  if (req.user?.role !== "ADMIN") return res.status(403).json({ error: "Forbidden: insufficient role" });
+  next();
+}
+
 // CEO / Investor Dashboard (BRD Section 34.4) — every figure here is derived
 // from real orders/hubs/users/zones data already in the system. No fabricated
 // metrics: where a concept (e.g. "funding book") has no real backing data
 // anywhere in this app, it's simply left out rather than faked.
-router.get("/ceo-summary", (req, res) => {
+router.get("/ceo-summary", adminOnly, (req, res) => {
   const orders = db.prepare("SELECT * FROM orders").all();
   const revenueOrders = orders.filter(o => o.status === "delivered" || o.status === "confirmed");
   const gmv = revenueOrders.reduce((sum, o) => sum + (o.amount || 0), 0);
@@ -74,7 +81,7 @@ router.get("/ceo-summary", (req, res) => {
 // District / State Dashboard (BRD Section 34.4) — a roll-up of every hub and
 // ward beneath each district-level zone, computed by walking the real zone
 // parent/child tree rather than assuming a fixed depth.
-router.get("/district-summary", (req, res) => {
+router.get("/district-summary", adminOnly, (req, res) => {
   const zones = db.prepare("SELECT * FROM zones").all();
   const hubs = db.prepare("SELECT * FROM hubs").all();
   const orders = db.prepare("SELECT * FROM orders").all();
@@ -132,6 +139,44 @@ router.get("/district-summary", (req, res) => {
   });
 
   res.json(summary);
+});
+
+// Operations Dashboard (BRD Section 34.4) — real dispatch/SLA/escalation
+// signals only. "Hub audit status" from the BRD has no real data behind it
+// anywhere in this app (no audit-scheduling feature exists yet), so it's
+// deliberately left out here rather than faked — the frontend says so.
+router.get("/operations-summary", (req, res) => {
+  const orders = db.prepare("SELECT * FROM orders").all();
+  const complaints = db.prepare("SELECT * FROM complaints").all();
+
+  const statusCounts = {};
+  orders.forEach(o => { statusCounts[o.status] = (statusCounts[o.status] || 0) + 1; });
+
+  const slaHours = 24;
+  const cutoff = new Date(Date.now() - slaHours * 60 * 60 * 1000).toISOString();
+  const slaBreaches = orders.filter(o => o.status === "pending" && o.created_at <= cutoff);
+
+  const escalations = complaints.filter(c => c.priority === "High" && c.status !== "resolved");
+
+  const riderLoad = new Map();
+  orders.filter(o => o.rider_name && o.status !== "delivered" && o.status !== "cancelled").forEach(o => {
+    riderLoad.set(o.rider_name, (riderLoad.get(o.rider_name) || 0) + 1);
+  });
+
+  const hubLoad = new Map();
+  orders.filter(o => o.hub_name && o.status !== "delivered" && o.status !== "cancelled").forEach(o => {
+    hubLoad.set(o.hub_name, (hubLoad.get(o.hub_name) || 0) + 1);
+  });
+
+  res.json({
+    statusCounts,
+    slaHours,
+    slaBreachCount: slaBreaches.length,
+    escalationCount: escalations.length,
+    escalations: escalations.map(c => ({ id: c.id, complainantName: c.complainant_name, description: c.description, category: c.category, createdAt: c.created_at })),
+    riderLoad: [...riderLoad.entries()].map(([rider, activeOrders]) => ({ rider, activeOrders })),
+    hubLoad: [...hubLoad.entries()].map(([hub, activeOrders]) => ({ hub, activeOrders })),
+  });
 });
 
 module.exports = router;

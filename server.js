@@ -52,7 +52,9 @@ app.use("/invoices", verifyToken, requireRole("ADMIN", "OPS"), auditLogger, invo
 app.use("/documents", verifyToken, auditLogger, documentsRoutes);
 app.use("/uploads", verifyToken, express.static(documentsRoutes.UPLOAD_DIR));
 app.use("/pricing-rules", verifyToken, requireRole("ADMIN", "OPS"), auditLogger, pricingRulesRoutes);
-app.use("/executive", verifyToken, requireRole("ADMIN"), executiveRoutes);
+// Role checks for individual endpoints (CEO/district data is ADMIN-only;
+// Operations is also open to OPS) live inside routes/executive.js itself.
+app.use("/executive", verifyToken, requireRole("ADMIN", "OPS"), executiveRoutes);
 
 app.get("/", (req, res) => {
   res.json({ status: "Udyami Queens Traceability API running" });
