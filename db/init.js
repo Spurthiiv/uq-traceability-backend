@@ -336,6 +336,28 @@ db.exec(`
     uploaded_by TEXT,
     created_at TEXT DEFAULT CURRENT_TIMESTAMP
   );
+
+  -- BRD Section 34.4 — Training/Performance tracking. A module targets a
+  -- role (or 'ALL'); a completion record is a real assignment to a real user,
+  -- pending until marked complete.
+  CREATE TABLE IF NOT EXISTS training_modules (
+    id TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
+    role TEXT NOT NULL DEFAULT 'ALL',
+    description TEXT,
+    created_at TEXT DEFAULT CURRENT_TIMESTAMP
+  );
+
+  CREATE TABLE IF NOT EXISTS training_completions (
+    id TEXT PRIMARY KEY,
+    module_id TEXT NOT NULL,
+    user_id TEXT NOT NULL,
+    status TEXT DEFAULT 'pending',
+    completed_at TEXT,
+    created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (module_id) REFERENCES training_modules(id),
+    FOREIGN KEY (user_id) REFERENCES users(id)
+  );
 `);
 
 // Coupon support on orders — a real discount that was actually applied,
