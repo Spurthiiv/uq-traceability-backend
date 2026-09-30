@@ -1,18 +1,9 @@
-const jwt = require("jsonwebtoken");
-const JWT_SECRET = process.env.JWT_SECRET || "uq-dev-secret-change-in-production"; // same secret as auth.js
-
+// Authentication removed at the user's explicit request — every request is
+// treated as this fixed ADMIN identity, no credentials checked at all.
+// Anyone who can reach this API has full access.
 function verifyToken(req, res, next) {
-  const header = req.headers.authorization;
-  if (!header || !header.startsWith("Bearer ")) {
-    return res.status(401).json({ error: "No token provided" });
-  }
-  try {
-    const decoded = jwt.verify(header.split(" ")[1], JWT_SECRET);
-    req.user = decoded; // { id, email, role, name }
-    next();
-  } catch (err) {
-    return res.status(401).json({ error: "Invalid or expired token" });
-  }
+  req.user = { id: "no-auth-admin", email: "admin@local", role: "ADMIN", name: "Admin" };
+  next();
 }
 
 function requireRole(...allowedRoles) {
