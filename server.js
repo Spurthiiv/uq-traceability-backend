@@ -25,6 +25,7 @@ const documentsRoutes = require("./routes/documents");
 const pricingRulesRoutes = require("./routes/pricingRules");
 const executiveRoutes = require("./routes/executive");
 const trainingRoutes = require("./routes/training");
+const roleDashboardRoutes = require("./routes/roleDashboards");
 const { verifyToken, requireRole } = require("./middleware/auth");
 const { auditLogger } = require("./middleware/audit");
 
@@ -57,6 +58,7 @@ app.use("/pricing-rules", verifyToken, requireRole("ADMIN", "OPS"), auditLogger,
 // Operations is also open to OPS) live inside routes/executive.js itself.
 app.use("/executive", verifyToken, requireRole("ADMIN", "OPS"), executiveRoutes);
 app.use("/training", verifyToken, requireRole("ADMIN", "OPS"), auditLogger, trainingRoutes);
+app.use("/role-view", verifyToken, requireRole("ADMIN", "OPS"), roleDashboardRoutes);
 
 app.get("/", (req, res) => {
   res.json({ status: "Udyami Queens Traceability API running" });

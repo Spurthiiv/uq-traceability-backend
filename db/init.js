@@ -445,6 +445,9 @@ if (!userColumns.includes("status")) {
 if (!userColumns.includes("phone")) {
   db.exec("ALTER TABLE users ADD COLUMN phone TEXT");
 }
+if (!userColumns.includes("is_online")) {
+  db.exec("ALTER TABLE users ADD COLUMN is_online INTEGER DEFAULT 0");
+}
 
 const SETTINGS_COLUMNS = {
   // General
