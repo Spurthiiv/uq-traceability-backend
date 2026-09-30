@@ -23,6 +23,7 @@ const refundsRoutes = require("./routes/refunds");
 const invoicesRoutes = require("./routes/invoices");
 const documentsRoutes = require("./routes/documents");
 const pricingRulesRoutes = require("./routes/pricingRules");
+const executiveRoutes = require("./routes/executive");
 const { verifyToken, requireRole } = require("./middleware/auth");
 const { auditLogger } = require("./middleware/audit");
 
@@ -51,6 +52,7 @@ app.use("/invoices", verifyToken, requireRole("ADMIN", "OPS"), auditLogger, invo
 app.use("/documents", verifyToken, auditLogger, documentsRoutes);
 app.use("/uploads", verifyToken, express.static(documentsRoutes.UPLOAD_DIR));
 app.use("/pricing-rules", verifyToken, requireRole("ADMIN", "OPS"), auditLogger, pricingRulesRoutes);
+app.use("/executive", verifyToken, requireRole("ADMIN"), executiveRoutes);
 
 app.get("/", (req, res) => {
   res.json({ status: "Udyami Queens Traceability API running" });
